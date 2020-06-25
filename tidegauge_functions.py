@@ -23,8 +23,8 @@ def read_tidegauge_psmsl(path, columns=None):
 
     df = pd.read_csv(path, header=None, engine='c')
 
-    print(f'len(df.columns): {len(df.columns)}')
-    print(f'len(columns): {len(columns)}')
+    print(f'number of df.columns: {len(df.columns)}')
+    print(f'length of columns: {len(columns)}')
     
     if len(df.columns) == len(columns):
 #         columns += ['unknown']
