@@ -55,10 +55,24 @@ def read_GPS_nam14_UNAVCO(path, columns=None):
     df = df.drop('Date', axis=1)
     
     #Rolling Mean
-    df['rolling_mean_year'] = df.Vertical.rolling(window=365).mean()
-    df['rolling_mean_month'] = df.Vertical.rolling(window=28).mean()
+    df['rolling_mean_year_Vert'] = df.Vertical.rolling(window=365).mean()
+    df['rolling_mean_month_Vert'] = df.Vertical.rolling(window=28).mean()
+    
+    df['rolling_mean_year_North'] = df.North.rolling(window=365).mean()
+    df['rolling_mean_month_North'] = df.North.rolling(window=28).mean()
+    
+    df['rolling_mean_year_East'] = df.East.rolling(window=365).mean()
+    df['rolling_mean_month_East'] = df.East.rolling(window=28).mean()
     
     # Detrended
-    df['MDT_mean_Vert']=(df.Vertical -df.rolling_mean_month)
-    df['ADT_mean_Vert']=(df.Vertical -df.rolling_mean_year)
+    df['MDT_mean_Vert']=(df.Vertical -df.rolling_mean_month_Vert)
+    df['ADT_mean_Vert']=(df.Vertical -df.rolling_mean_year_Vert)
+    
+    df['MDT_mean_North']=(df.North -df.rolling_mean_month_North)
+    df['ADT_mean_North']=(df.North -df.rolling_mean_year_North)
+    
+    df['MDT_mean_East']=(df.East -df.rolling_mean_month_East)
+    df['ADT_mean_East']=(df.East -df.rolling_mean_year_East)
+    
+    
     return df
