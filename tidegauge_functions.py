@@ -41,3 +41,24 @@ def read_tidegauge_psmsl(path, columns=None):
     
     
     return df
+
+
+def read_GPS_nam14_UNAVCO(path, columns=None):
+    columns=['Date', 'North', 'East', 'Vertical', 'NorthSTD', 'EastSTD', 'VerticalSTD', 'Quality', 'NaN']
+    df = pd.read_csv(path, skiprows=12, header=None, engine='c')
+    if len(df.columns) == len(columns):
+        df.columns = ['Date', 'North', 'East', 'Vertical', 'NorthSTD', 'EastSTD', 'VerticalSTD', 'Quality', 'NaN']
+        dt = pd.to_datetime(df['Date'])
+    
+    #create datetime index
+    df.index = pd.DatetimeIndex(dt)
+    df = df.drop('Date', axis=1)
+    
+    #Rolling Mean
+    df['rolling_mean_year'] = df.Vertical.rolling(window=365).mean()
+    df['rolling_mean_month'] = df.Vertical.rolling(window=28).mean()
+    
+    # Detrended
+    df['MDT_mean_Vert']=(df.Vertical -df.rolling_mean_month)
+    df['ADT_mean_Vert']=(df.Vertical -df.rolling_mean_year)
+    return df
