@@ -77,3 +77,15 @@ def read_GPS_nam14_UNAVCO(path, columns=None):
     
     
     return df
+
+
+def read_GPS_SONEL(sonel_file):
+    column_names=['Year', 'DN', 'DE', 'DU', 'SDN', 'SDE', 'SDU']
+    df = pd.read_csv(sonel_file, skiprows=22, header=None, delimiter='\s+', names=column_names)
+    year = df['Year'].astype(int)
+    doy = ((df['Year'] - year) * 365).astype(int) + 1  # TODO: This might be off by one day...
+    dt = pd.to_datetime(year.astype(str) + doy.astype(str), format='%Y%j')
+    df = df.rename(columns={'Year': 'YearDec'})
+    df.index = pd.DatetimeIndex(dt)
+
+    return df
