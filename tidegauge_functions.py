@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+from statsmodels.tsa.seasonal import seasonal_decompose
 
 def read_tidegauge_psmsl(path, columns=None):
     """
@@ -54,25 +55,25 @@ def read_GPS_nam14_UNAVCO(path, columns=None):
     df.index = pd.DatetimeIndex(dt)
     df = df.drop('Date', axis=1)
     
-    #Rolling Mean
-    df['rolling_mean_year_Vert'] = df.Vertical.rolling(window=365).mean()
-    df['rolling_mean_month_Vert'] = df.Vertical.rolling(window=28).mean()
-    
-    df['rolling_mean_year_North'] = df.North.rolling(window=365).mean()
-    df['rolling_mean_month_North'] = df.North.rolling(window=28).mean()
-    
-    df['rolling_mean_year_East'] = df.East.rolling(window=365).mean()
-    df['rolling_mean_month_East'] = df.East.rolling(window=28).mean()
-    
-    # Detrended
-    df['MDT_mean_Vert']=(df.Vertical -df.rolling_mean_month_Vert)
-    df['ADT_mean_Vert']=(df.Vertical -df.rolling_mean_year_Vert)
-    
-    df['MDT_mean_North']=(df.North -df.rolling_mean_month_North)
-    df['ADT_mean_North']=(df.North -df.rolling_mean_year_North)
-    
-    df['MDT_mean_East']=(df.East -df.rolling_mean_month_East)
-    df['ADT_mean_East']=(df.East -df.rolling_mean_year_East)
+    #Rolling decomposition
+
+    decomposition_Vert = seasonal_decompose(df['Vertical'], period = 365)
+
+    df['trend_Vert'] = decomposition_Vert.trend
+    df['seasonal_Vert'] = decomposition_Vert.seasonal
+    df['residual_Vert'] = decomposition_Vert.resid
+
+    decomposition_North = seasonal_decompose(df['North'], period = 365)
+
+    df['trend_North'] = decomposition_North.trend
+    df['seasonal_North'] = decomposition_North.seasonal
+    df['residual_North'] = decomposition_North.resid
+
+    decomposition_East = seasonal_decompose(df['East'], period = 365)
+
+    df['trend_East'] = decomposition_East.trend
+    df['seasonal_East'] = decomposition_East.seasonal
+    df['residual_East'] = decomposition_East.resid
     
     
     return df
