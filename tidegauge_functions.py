@@ -81,21 +81,21 @@ def read_GPS_nam14_UNAVCO(path, columns=None):
     return df
 
 
-def calc_rolling_decomposition_GPS(df):
+def calc_rolling_decomposition_GPS(df, period=365):
 
-    decomposition_Vert = seasonal_decompose(df['Vertical'], period=365)
+    decomposition_Vert = seasonal_decompose(df['Vertical'], period)
 
     df['trend_Vert'] = decomposition_Vert.trend
     df['seasonal_Vert'] = decomposition_Vert.seasonal
     df['residual_Vert'] = decomposition_Vert.resid
 
-    decomposition_North = seasonal_decompose(df['North'], period=365)
+    decomposition_North = seasonal_decompose(df['North'], period)
 
     df['trend_North'] = decomposition_North.trend
     df['seasonal_North'] = decomposition_North.seasonal
     df['residual_North'] = decomposition_North.resid
 
-    decomposition_East = seasonal_decompose(df['East'], period=365)
+    decomposition_East = seasonal_decompose(df['East'], period)
 
     df['trend_East'] = decomposition_East.trend
     df['seasonal_East'] = decomposition_East.seasonal
@@ -104,7 +104,7 @@ def calc_rolling_decomposition_GPS(df):
     return df
 
 
-def read_GPS_SONEL(sonel_file):
+def read_GPS_SONEL(sonel_file, convert=True):
     i_skip = find_skiprows_startofline(sonel_file, '#  Year')
     column_names = ['Year', 'DN', 'DE', 'DU', 'SDN', 'SDE', 'SDU']
     df = pd.read_csv(sonel_file, skiprows=i_skip, header=None, delimiter='\s+', names=column_names)
@@ -113,5 +113,5 @@ def read_GPS_SONEL(sonel_file):
     dt = pd.to_datetime(year.astype(str) + doy.astype(str), format='%Y%j')
     df = df.rename(columns={'Year': 'YearDec'})
     df.index = pd.DatetimeIndex(dt)
-
+    
     return df
