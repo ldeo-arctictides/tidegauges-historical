@@ -1,6 +1,8 @@
 import os
 import numpy as np
 import pandas as pd
+import statsmodels.api as sm
+
 from statsmodels.tsa.seasonal import seasonal_decompose
 
 
@@ -114,4 +116,30 @@ def read_GPS_SONEL(sonel_file, convert=True):
     df = df.rename(columns={'Year': 'YearDec'})
     df.index = pd.DatetimeIndex(dt)
     
+    return df
+
+
+def calc_OLS_tides(df, var):
+    x, y = np.arange(len(df[var].dropna())), df[var].dropna()
+    x = sm.add_constant(x)
+    model = sm.OLS(y, x)
+    res = model.fit()
+    
+    return res
+
+
+def read_tidegauge_monthly(monthly_file):
+    column_names=['Year', 'SSH', 'unknown1', 'unknown2']
+    df = pd.read_csv(monthly_file, header=None, delimiter=';', names=column_names)
+    
+    # NaNs
+    df['SSH'] = df['SSH'].replace(-99999, np.nan) 
+    
+    # Datetime operations
+    year = df['Year'].astype(int)
+    month = ((df['Year'] - year) * 12).astype(int) + 1
+    dt = pd.to_datetime(year.astype(str) + month.astype(str), format='%Y%m')
+    df = df.rename(columns={'Year': 'YearDec'})
+    df.index = pd.DatetimeIndex(dt)
+
     return df
