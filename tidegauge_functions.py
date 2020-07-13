@@ -2,7 +2,8 @@ import os
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
-
+from statsmodels.tsa.stattools import adfuller
+import glob
 from statsmodels.tsa.seasonal import seasonal_decompose
 
 
@@ -108,7 +109,7 @@ def calc_rolling_decomposition_GPS(df, period=365):
 
 def read_GPS_SONEL(sonel_file, convert=True):
     i_skip = find_skiprows_startofline(sonel_file, '#  Year')
-    column_names = ['Year', 'DN', 'DE', 'DU', 'SDN', 'SDE', 'SDU']
+    column_names = ['Year', 'North', 'East', 'Vertical', 'NorthSTD', 'EastSTD', 'VerticalSTD']
     df = pd.read_csv(sonel_file, skiprows=i_skip, header=None, delimiter='\s+', names=column_names)
     year = df['Year'].astype(int)
     doy = ((df['Year'] - year) * 365).astype(int) + 1  # TODO: This might be off by one day...
@@ -143,3 +144,30 @@ def read_tidegauge_monthly(monthly_file):
     df.index = pd.DatetimeIndex(dt)
 
     return df
+
+
+def ADF_Summary(df1, df2):
+    for df1, filepath in enumerate(df1):
+        df1 = read_GPS_SONEL(filepath)
+        files = print(f'\n\n{filepath}')
+    
+        result = adfuller(df1['Vertical'])
+        #print(result)
+        print('ADF Statistic: {}'.format(result[0]))
+        print('p-value: {}'.format(result[1]))
+        print('Critical Values:')
+        for key, value in result[4].items():
+            ADF = print('\t{}: {}'.format(key, value))
+    
+    for df2, filepath in enumerate(df2):
+        df2 = read_GPS_nam14_UNAVCO(filepath)
+        files = print(f'\n\n{filepath}')
+    
+        result = adfuller(df2['Vertical'])
+        #print(result)
+        print('ADF Statistic: {}'.format(result[0]))
+        print('p-value: {}'.format(result[1]))
+        print('Critical Values:')
+        for key, value in result[4].items():
+            ADF = print('\t{}: {}'.format(key, value))
+    return(files, ADF)
