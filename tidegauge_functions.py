@@ -146,6 +146,31 @@ def read_tidegauge_monthly(monthly_file):
     return df
 
 
+def read_CCAR_altimetry(ccar_file):
+    i_skip = find_skiprows_startofline(ccar_file, 'time')
+    column_names=['Year', 'SSH', '', 'Year2', 'SSH_tides']
+    df = pd.read_csv(ccar_file, 
+                     skiprows=i_skip,
+                     header=None, 
+                     delimiter=',', 
+                     names=column_names)
+    
+    # NaNs
+#     df['SSH'] = df['SSH'].replace(-99999, np.nan) 
+    
+    ## Datetime operations
+    year = df['Year'].astype(int)
+    doy = ((df['Year'] - year) * 365).astype(int) + 1  # TODO: This might be off by one day...
+    dt = pd.to_datetime(year.astype(str) + doy.astype(str), format='%Y%j')
+    df = df.rename(columns={'Year': 'YearDec'})
+    df.index = pd.DatetimeIndex(dt)
+    
+    # delete unused columns
+    df = df.drop([df.columns[2], 'Year2', 'SSH_tides'], axis=1)
+
+    return df
+
+
 def ADF_Summary(df1, df2):
     for df1, filepath in enumerate(df1):
         df1 = read_GPS_SONEL(filepath)
@@ -171,3 +196,5 @@ def ADF_Summary(df1, df2):
         for key, value in result[4].items():
             ADF = print('\t{}: {}'.format(key, value))
     return(files, ADF)
+
+
