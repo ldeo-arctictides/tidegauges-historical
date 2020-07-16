@@ -129,6 +129,13 @@ def calc_OLS_tides(df, var):
     return res
 
 
+def convert_trend_toyearly(df, res):
+    period = df.index.year.value_counts().max()
+    yearlytrend = res.params.x1 * period
+    
+    return yearlytrend
+
+
 def read_tidegauge_monthly(monthly_file):
     column_names=['Year', 'SSH', 'unknown1', 'unknown2']
     df = pd.read_csv(monthly_file, header=None, delimiter=';', names=column_names)
@@ -198,3 +205,27 @@ def ADF_Summary(df1, df2):
     return(files, ADF)
 
 
+def plot_OLS_overlay(df, res, site, var, data_units, simpletrend=True):
+    import matplotlib.pyplot as plt
+    
+    fig, ax = plt.subplots(1, 1, figsize=(12,6));
+    ax.plot(df[var].dropna().index, df[var].dropna().values, 
+            label='Data', marker=',', linestyle='', color='black')
+    
+    ## Plot linea model
+    if simpletrend:
+        ax.plot((df[var].index[0], df[var].index[-1]), 
+            (res.params.x1*1 + res.params.const, res.params.x1*df.shape[0] + res.params.const),
+               label='Trend', linestyle='--', color='purple')
+    else:
+            ax.plot(df[var].index, [res.params.x1*i + res.params.const for i in np.arange(len(df[var]))])
+
+    ## zero line
+#     ax.plot((df[var].index[0], df[var].index[-1]), (0, 0), 'k')
+    
+    ## customize
+#     ax.set_title(f"Trend = {res.params.x1 * 1000:.2f} mm/yr");
+    ax.set_ylabel(data_units)
+    plt.suptitle(f"{site}")
+    plt.legend()
+    plt.savefig(f'figs/test_GPS_OLS_{site}.png')
