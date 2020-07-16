@@ -2,7 +2,8 @@ import os
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
-
+from statsmodels.tsa.stattools import adfuller
+import glob
 from statsmodels.tsa.seasonal import seasonal_decompose
 
 
@@ -108,7 +109,7 @@ def calc_rolling_decomposition_GPS(df, period=365):
 
 def read_GPS_SONEL(sonel_file, convert=True):
     i_skip = find_skiprows_startofline(sonel_file, '#  Year')
-    column_names = ['Year', 'DN', 'DE', 'DU', 'SDN', 'SDE', 'SDU']
+    column_names = ['Year', 'North', 'East', 'Vertical', 'NorthSTD', 'EastSTD', 'VerticalSTD']
     df = pd.read_csv(sonel_file, skiprows=i_skip, header=None, delimiter='\s+', names=column_names)
     year = df['Year'].astype(int)
     doy = ((df['Year'] - year) * 365).astype(int) + 1  # TODO: This might be off by one day...
@@ -128,6 +129,13 @@ def calc_OLS_tides(df, var):
     return res
 
 
+def convert_trend_toyearly(df, res):
+    period = df.index.year.value_counts().max()
+    yearlytrend = res.params.x1 * period
+    
+    return yearlytrend
+
+
 def read_tidegauge_monthly(monthly_file):
     column_names=['Year', 'SSH', 'unknown1', 'unknown2']
     df = pd.read_csv(monthly_file, header=None, delimiter=';', names=column_names)
@@ -143,3 +151,81 @@ def read_tidegauge_monthly(monthly_file):
     df.index = pd.DatetimeIndex(dt)
 
     return df
+
+
+def read_CCAR_altimetry(ccar_file):
+    i_skip = find_skiprows_startofline(ccar_file, 'time')
+    column_names=['Year', 'SSH', '', 'Year2', 'SSH_tides']
+    df = pd.read_csv(ccar_file, 
+                     skiprows=i_skip,
+                     header=None, 
+                     delimiter=',', 
+                     names=column_names)
+    
+    # NaNs
+#     df['SSH'] = df['SSH'].replace(-99999, np.nan) 
+    
+    ## Datetime operations
+    year = df['Year'].astype(int)
+    doy = ((df['Year'] - year) * 365).astype(int) + 1  # TODO: This might be off by one day...
+    dt = pd.to_datetime(year.astype(str) + doy.astype(str), format='%Y%j')
+    df = df.rename(columns={'Year': 'YearDec'})
+    df.index = pd.DatetimeIndex(dt)
+    
+    # delete unused columns
+    df = df.drop([df.columns[2], 'Year2', 'SSH_tides'], axis=1)
+
+    return df
+
+
+def ADF_Summary(df1, df2):
+    for df1, filepath in enumerate(df1):
+        df1 = read_GPS_SONEL(filepath)
+        files = print(f'\n\n{filepath}')
+    
+        result = adfuller(df1['Vertical'])
+        #print(result)
+        print('ADF Statistic: {}'.format(result[0]))
+        print('p-value: {}'.format(result[1]))
+        print('Critical Values:')
+        for key, value in result[4].items():
+            ADF = print('\t{}: {}'.format(key, value))
+    
+    for df2, filepath in enumerate(df2):
+        df2 = read_GPS_nam14_UNAVCO(filepath)
+        files = print(f'\n\n{filepath}')
+    
+        result = adfuller(df2['Vertical'])
+        #print(result)
+        print('ADF Statistic: {}'.format(result[0]))
+        print('p-value: {}'.format(result[1]))
+        print('Critical Values:')
+        for key, value in result[4].items():
+            ADF = print('\t{}: {}'.format(key, value))
+    return(files, ADF)
+
+
+def plot_OLS_overlay(df, res, site, var, data_units, simpletrend=True):
+    import matplotlib.pyplot as plt
+    
+    fig, ax = plt.subplots(1, 1, figsize=(12,6));
+    ax.plot(df[var].dropna().index, df[var].dropna().values, 
+            label='Data', marker=',', linestyle='', color='black')
+    
+    ## Plot linea model
+    if simpletrend:
+        ax.plot((df[var].index[0], df[var].index[-1]), 
+            (res.params.x1*1 + res.params.const, res.params.x1*df.shape[0] + res.params.const),
+               label='Trend', linestyle='--', color='purple')
+    else:
+            ax.plot(df[var].index, [res.params.x1*i + res.params.const for i in np.arange(len(df[var]))])
+
+    ## zero line
+#     ax.plot((df[var].index[0], df[var].index[-1]), (0, 0), 'k')
+    
+    ## customize
+#     ax.set_title(f"Trend = {res.params.x1 * 1000:.2f} mm/yr");
+    ax.set_ylabel(data_units)
+    plt.suptitle(f"{site}")
+    plt.legend()
+    plt.savefig(f'figs/test_GPS_OLS_{site}.png')
