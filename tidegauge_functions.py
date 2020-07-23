@@ -114,7 +114,8 @@ def read_GPS_SONEL(sonel_file, convert=True):
     year = df['Year'].astype(int)
     doy = ((df['Year'] - year) * 365).astype(int) + 1  # TODO: This might be off by one day...
     dt = pd.to_datetime(year.astype(str) + doy.astype(str), format='%Y%j')
-    df = df.rename(columns={'Year': 'YearDec'})
+    df = df.drop('Year', axis = 1)
+    df = df * 1000
     df.index = pd.DatetimeIndex(dt)
     
     return df
