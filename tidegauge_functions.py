@@ -29,6 +29,27 @@ def find_skiprows_startofline(infile, search_string, diagnostics=False):
                 return i + 1
 
 
+def get_SONEL_headerinfo(infile):
+    with open(infile, "r") as f:
+        for line in f:
+#             print(line)
+            if 'Site ID' in line:
+                site = line.split(':')[1].split(' ')[1][:-1]
+            if 'Latitude' in line:
+                lat = line.split(':')[1].split(' ')[3]
+            if 'Longitude' in line:
+                lon = line.split(':')[1].split(' ')[1]
+            if 'Height' in line:
+#                 print(line)
+#                 print(line.split(':'))
+                height = line.split(':')[1].split(' ')[2]
+    
+#                 lat = line.index('Latitude')
+#                 numbers.append(line[start:start+13])
+    
+    return site, lat, lon, height
+
+
 def read_tidegauge_psmsl(path, columns=None):
     """
     Read and parse PSMSL tide gauge data
