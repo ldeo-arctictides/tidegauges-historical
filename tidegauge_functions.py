@@ -34,18 +34,17 @@ def get_SONEL_headerinfo(infile):
         for line in f:
 #             print(line)
             if 'Site ID' in line:
-                site = line.split(':')[1].split(' ')[1][:-1]
+                print(line)
+                site = line[line.find(':')+1:].split()[0]
             if 'Latitude' in line:
-                lat = line.split(':')[1].split(' ')[3]
+                lat = line[line.find(':')+1:].split()[0]
             if 'Longitude' in line:
-                lon = line.split(':')[1].split(' ')[1]
+                lon = line[line.find(':')+1:].split()[0]
             if 'Height' in line:
-#                 print(line)
+#                 print('\n',line)
 #                 print(line.split(':'))
-                height = line.split(':')[1].split(' ')[2]
-    
-#                 lat = line.index('Latitude')
-#                 numbers.append(line[start:start+13])
+                height = line[line.find(':')+1:].split()[0]
+
     
     return site, lat, lon, height
 
