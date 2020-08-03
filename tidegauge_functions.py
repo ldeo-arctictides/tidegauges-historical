@@ -49,6 +49,26 @@ def get_SONEL_headerinfo(infile):
     return site, lat, lon, height
 
 
+def get_UNAVCO_headerinfo(infile):
+    with open(infile, "r") as f:
+        for line in f:
+#             print(line)
+            if '4-character ID' in line:
+                print(line)
+                site = line[line.find(',')+1:].split()[0]
+            if 'Reference position' in line:
+                lat = line[line.find('Reference position,')+20:].split()[0]
+            if 'North Latitude' in line:
+                lon = line[line.find('North Latitude,')+16:].split()[0]
+            if 'East Longitude' in line:
+#                 print('\n',line)
+#                 print(line.split(':'))
+                height = line[line.find('East Longitude,')+16:].split()[0]
+
+    
+    return site, lat, lon, height
+
+
 def read_tidegauge_psmsl(path, columns=None):
     """
     Read and parse PSMSL tide gauge data
