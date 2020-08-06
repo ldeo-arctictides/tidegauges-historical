@@ -34,18 +34,37 @@ def get_SONEL_headerinfo(infile):
         for line in f:
 #             print(line)
             if 'Site ID' in line:
-                site = line.split(':')[1].split(' ')[1][:-1]
+                print(line)
+                site = line[line.find(':')+1:].split()[0]
             if 'Latitude' in line:
-                lat = line.split(':')[1].split(' ')[3]
+                lat = line[line.find(':')+1:].split()[0]
             if 'Longitude' in line:
-                lon = line.split(':')[1].split(' ')[1]
+                lon = line[line.find(':')+1:].split()[0]
             if 'Height' in line:
-#                 print(line)
+#                 print('\n',line)
 #                 print(line.split(':'))
-                height = line.split(':')[1].split(' ')[2]
+                height = line[line.find(':')+1:].split()[0]
+
     
-#                 lat = line.index('Latitude')
-#                 numbers.append(line[start:start+13])
+    return site, lat, lon, height
+
+
+def get_UNAVCO_headerinfo(infile):
+    with open(infile, "r") as f:
+        for line in f:
+#             print(line)
+            if '4-character ID' in line:
+                print(line)
+                site = line[line.find(',')+1:].split()[0]
+            if 'Reference position' in line:
+                lat = line[line.find('Reference position,')+20:].split()[0]
+            if 'North Latitude' in line:
+                lon = line[line.find('North Latitude,')+16:].split()[0]
+            if 'East Longitude' in line:
+#                 print('\n',line)
+#                 print(line.split(':'))
+                height = line[line.find('East Longitude,')+16:].split()[0]
+
     
     return site, lat, lon, height
 
